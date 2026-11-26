@@ -101,6 +101,55 @@ export interface EmergencyContact {
   category: EmergencyCategory;
 }
 
+export interface TaxiCardHotelInfo {
+  japaneseName: string;
+  englishName: string;
+  koreanName: string;
+  postalCode: string;
+  japaneseAddress: string;
+  englishAddress: string;
+  driverPhraseJapanese: string;
+  driverPhraseKorean: string;
+  landmarkNote: string;
+}
+
+export interface SosDialLine {
+  id: string;
+  label: string;
+  subLabel: string;
+  phone: string;
+  telHref: string;
+  isUrgent?: boolean;
+}
+
+export interface SosEmergencyData {
+  guide: {
+    name: string;
+    phone: string;
+    isSample: true;
+    note: string;
+  };
+  police: {
+    name: string;
+    phone: string;
+    telHref: string;
+    description: string;
+    source: string;
+  };
+  embassy: {
+    name: string;
+    source: string;
+    numbers: SosDialLine[];
+  };
+  consularCallCenter: {
+    name: string;
+    phone: string;
+    telHref: string;
+    description: string;
+    source: string;
+  };
+}
+
 export interface TravelPlannerState {
   schemaVersion: number;
   tripMeta: TripMeta;

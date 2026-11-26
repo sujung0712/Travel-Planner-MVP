@@ -6,6 +6,13 @@ import {
   ItineraryItemInput,
   TripDay,
 } from '../../types/travel';
+import {
+  INPUT_LIMITS,
+  ItineraryValidationErrors,
+  ItineraryValidationField,
+  sanitizeTextInput,
+  validateItineraryInput,
+} from '../../utils/validation';
 
 interface ItineraryFormModalProps {
   isOpen: boolean;
@@ -42,12 +49,15 @@ export function ItineraryFormModal({
   const [location, setLocation] = useState('');
   const [activity, setActivity] = useState('');
   const [memo, setMemo] = useState('');
+  const [errors, setErrors] = useState<ItineraryValidationErrors>({});
 
   useEffect(() => {
     if (!isOpen) {
+      setErrors({});
       return;
     }
 
+    setErrors({});
     if (mode === 'edit' && editingItem) {
       setDay(editingItem.day);
       setTime(editingItem.time);
@@ -90,10 +100,25 @@ export function ItineraryFormModal({
     return null;
   }
 
+  const clearFieldError = (field: ItineraryValidationField) => {
+    setErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const locationLength = sanitizeTextInput(location).length;
+  const activityLength = sanitizeTextInput(activity).length;
+  const memoLength = sanitizeTextInput(memo, { multiline: true }).length;
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    onSubmit({
+    const candidate: ItineraryItemInput = {
       day,
       time,
       category,
@@ -109,8 +134,22 @@ export function ItineraryFormModal({
       ...(mode === 'edit' && editingItem?.transitHint
         ? { transitHint: editingItem.transitHint }
         : {}),
-    });
+    };
+
+    const result = validateItineraryInput(candidate);
+    if (!result.valid) {
+      setErrors(result.errors);
+      return;
+    }
+
+    setErrors({});
+    onSubmit(result.sanitized);
   };
+
+  const getInputBorderClass = (hasError: boolean): string =>
+    hasError
+      ? 'border-error focus:ring-error/30 focus:border-error'
+      : 'border-surface-container-high focus:ring-secondary/40 focus:border-secondary';
 
   return (
     <div
@@ -142,7 +181,7 @@ export function ItineraryFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
           <fieldset>
             <legend className="text-label-lg text-primary font-semibold mb-2">
               여행 일차
@@ -182,9 +221,19 @@ export function ItineraryFormModal({
                 type="time"
                 required
                 value={time}
-                onChange={(event) => setTime(event.target.value)}
-                className="w-full h-11 rounded-xl bg-surface-container-low border border-surface-container-high px-3.5 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-colors"
+                onChange={(event) => {
+                  setTime(event.target.value);
+                  clearFieldError('time');
+                }}
+                aria-invalid={Boolean(errors.time)}
+                aria-describedby={errors.time ? 'itinerary-time-error' : undefined}
+                className={`w-full h-11 rounded-xl bg-surface-container-low border px-3.5 text-body-md text-on-surface focus:outline-none focus:ring-2 transition-colors ${getInputBorderClass(Boolean(errors.time))}`}
               />
+              {errors.time && (
+                <p id="itinerary-time-error" role="alert" className="mt-1.5 text-label-sm text-error">
+                  {errors.time}
+                </p>
+              )}
             </div>
 
             <div>
@@ -212,56 +261,131 @@ export function ItineraryFormModal({
           </div>
 
           <div>
-            <label
-              htmlFor="itinerary-location"
-              className="block text-label-lg text-primary font-semibold mb-1.5"
-            >
-              방문 장소
-            </label>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label
+                htmlFor="itinerary-location"
+                className="block text-label-lg text-primary font-semibold"
+              >
+                방문 장소
+              </label>
+              <span
+                className={`text-label-sm tabular-nums ${
+                  locationLength > INPUT_LIMITS.ITINERARY_LOCATION_MAX
+                    ? 'text-error font-semibold'
+                    : 'text-outline'
+                }`}
+              >
+                {locationLength} / {INPUT_LIMITS.ITINERARY_LOCATION_MAX}자
+              </span>
+            </div>
             <input
               id="itinerary-location"
               type="text"
               required
               value={location}
-              onChange={(event) => setLocation(event.target.value)}
+              onChange={(event) => {
+                setLocation(event.target.value);
+                clearFieldError('location');
+              }}
+              aria-invalid={Boolean(errors.location)}
+              aria-describedby={errors.location ? 'itinerary-location-error' : undefined}
               placeholder="예: 시부야 스카이"
-              className="w-full h-11 rounded-xl bg-surface-container-low border border-surface-container-high px-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-colors"
+              className={`w-full h-11 rounded-xl bg-surface-container-low border px-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 transition-colors ${getInputBorderClass(Boolean(errors.location))}`}
             />
+            {errors.location && (
+              <p
+                id="itinerary-location-error"
+                role="alert"
+                className="mt-1.5 text-label-sm text-error"
+              >
+                {errors.location}
+              </p>
+            )}
           </div>
 
           <div>
-            <label
-              htmlFor="itinerary-activity"
-              className="block text-label-lg text-primary font-semibold mb-1.5"
-            >
-              주요 활동
-            </label>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label
+                htmlFor="itinerary-activity"
+                className="block text-label-lg text-primary font-semibold"
+              >
+                주요 활동
+              </label>
+              <span
+                className={`text-label-sm tabular-nums ${
+                  activityLength > INPUT_LIMITS.ITINERARY_ACTIVITY_MAX
+                    ? 'text-error font-semibold'
+                    : 'text-outline'
+                }`}
+              >
+                {activityLength} / {INPUT_LIMITS.ITINERARY_ACTIVITY_MAX}자
+              </span>
+            </div>
             <input
               id="itinerary-activity"
               type="text"
               required
               value={activity}
-              onChange={(event) => setActivity(event.target.value)}
+              onChange={(event) => {
+                setActivity(event.target.value);
+                clearFieldError('activity');
+              }}
+              aria-invalid={Boolean(errors.activity)}
+              aria-describedby={errors.activity ? 'itinerary-activity-error' : undefined}
               placeholder="예: 도쿄 야경 감상 및 저녁 식사"
-              className="w-full h-11 rounded-xl bg-surface-container-low border border-surface-container-high px-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-colors"
+              className={`w-full h-11 rounded-xl bg-surface-container-low border px-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 transition-colors ${getInputBorderClass(Boolean(errors.activity))}`}
             />
+            {errors.activity && (
+              <p
+                id="itinerary-activity-error"
+                role="alert"
+                className="mt-1.5 text-label-sm text-error"
+              >
+                {errors.activity}
+              </p>
+            )}
           </div>
 
           <div>
-            <label
-              htmlFor="itinerary-memo"
-              className="block text-label-lg text-primary font-semibold mb-1.5"
-            >
-              상세 메모
-            </label>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label
+                htmlFor="itinerary-memo"
+                className="block text-label-lg text-primary font-semibold"
+              >
+                상세 메모
+              </label>
+              <span
+                className={`text-label-sm tabular-nums ${
+                  memoLength > INPUT_LIMITS.ITINERARY_MEMO_MAX
+                    ? 'text-error font-semibold'
+                    : 'text-outline'
+                }`}
+              >
+                {memoLength} / {INPUT_LIMITS.ITINERARY_MEMO_MAX}자
+              </span>
+            </div>
             <textarea
               id="itinerary-memo"
               rows={3}
               value={memo}
-              onChange={(event) => setMemo(event.target.value)}
+              onChange={(event) => {
+                setMemo(event.target.value);
+                clearFieldError('memo');
+              }}
+              aria-invalid={Boolean(errors.memo)}
+              aria-describedby={errors.memo ? 'itinerary-memo-error' : undefined}
               placeholder="예약 QR 코드, 준비물, 이동 팁 등을 기록하세요"
-              className="w-full rounded-xl bg-surface-container-low border border-surface-container-high p-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-colors resize-none"
+              className={`w-full rounded-xl bg-surface-container-low border p-3.5 text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 transition-colors resize-none ${getInputBorderClass(Boolean(errors.memo))}`}
             />
+            {errors.memo && (
+              <p
+                id="itinerary-memo-error"
+                role="alert"
+                className="mt-1.5 text-label-sm text-error"
+              >
+                {errors.memo}
+              </p>
+            )}
           </div>
 
           <div className="pt-2 pb-1 grid grid-cols-2 gap-2.5">

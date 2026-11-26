@@ -1,4 +1,72 @@
-import { SCHEMA_VERSION, TravelPlannerState } from '../types/travel';
+import {
+  SCHEMA_VERSION,
+  SosEmergencyData,
+  TaxiCardHotelInfo,
+  TravelPlannerState,
+} from '../types/travel';
+
+export const TAXI_CARD_HOTEL_INFO: TaxiCardHotelInfo = {
+  japaneseName: 'ホテルグレイスリー新宿',
+  englishName: 'Hotel Gracery Shinjuku',
+  koreanName: '신주쿠 그레이스리 호텔 (2박 예약)',
+  postalCode: '〒160-8466',
+  japaneseAddress: '東京都新宿区歌舞伎町1-19-1',
+  englishAddress: '1-19-1 Kabukicho, Shinjuku-ku, Tokyo 160-8466, Japan',
+  driverPhraseJapanese: '運転手さん、こちらのホテルまでお願いします。',
+  driverPhraseKorean: '(기사님, 이 호텔로 가주세요.)',
+  landmarkNote: 'JR 신주쿠역 동쪽 출구 도보 5분 · 가부키초(歌舞伎町)',
+};
+
+export const SOS_EMERGENCY_DATA: SosEmergencyData = {
+  guide: {
+    name: '담당 여행 가이드 긴급 전화',
+    phone: '010-0000-0000',
+    isSample: true,
+    note: '예시용 샘플 번호입니다. 실제 출국 전 담당 가이드 연락처로 변경하세요.',
+  },
+  police: {
+    name: '일본 현지 경찰 신고',
+    phone: '110',
+    telHref: 'tel:110',
+    description: '범죄·분실·교통사고 등 긴급 신고 (일본 경찰청 공식)',
+    source: '일본 경찰청(NPA) 공식 긴급신고 번호',
+  },
+  embassy: {
+    name: '주일본 대한민국 대사관 (도쿄)',
+    source: '외교부 주일본 대한민국 대사관(mofa.go.kr) 공식 안내',
+    numbers: [
+      {
+        id: 'embassy-main',
+        label: '대표전화',
+        subLabel: '주간 대표',
+        phone: '+81-3-3452-7611',
+        telHref: 'tel:+81-3-3452-7611',
+      },
+      {
+        id: 'embassy-consular',
+        label: '영사부 문의',
+        subLabel: '평일 09:00~12:00, 13:30~18:00',
+        phone: '+81-3-3455-2601',
+        telHref: 'tel:+81-3-3455-2601',
+      },
+      {
+        id: 'embassy-urgent',
+        label: '사건·사고 긴급전화',
+        subLabel: '야간(18:00 이후)·휴일 당직',
+        phone: '+81-70-2153-5454',
+        telHref: 'tel:+81-70-2153-5454',
+        isUrgent: true,
+      },
+    ],
+  },
+  consularCallCenter: {
+    name: '외교부 영사콜센터 (24시간)',
+    phone: '+82-2-3210-0404',
+    telHref: 'tel:+82-2-3210-0404',
+    description: '연중무휴 24시간 한국어 해외 긴급 영사 상담',
+    source: '대한민국 외교부 영사콜센터 공식 안내',
+  },
+};
 
 export function createInitialSampleState(): TravelPlannerState {
   return {

@@ -6,6 +6,7 @@ import {
   TravelPlannerState,
 } from '../types/travel';
 import { loadTravelState, resetTravelState, saveTravelState } from '../utils/storage';
+import { validateItineraryInput, validateNoticeInput } from '../utils/validation';
 import { TravelPlannerContext } from './TravelPlannerContext';
 
 interface TravelPlannerProviderProps {
@@ -25,12 +26,17 @@ export function TravelPlannerProvider({ children }: TravelPlannerProviderProps) 
   }, [state]);
 
   const addItineraryItem = useCallback((input: ItineraryItemInput) => {
+    const result = validateItineraryInput(input);
+    if (!result.valid) {
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       itinerary: [
         ...prev.itinerary,
         {
-          ...input,
+          ...result.sanitized,
           id: createId('itn'),
         },
       ],
@@ -38,10 +44,15 @@ export function TravelPlannerProvider({ children }: TravelPlannerProviderProps) 
   }, []);
 
   const updateItineraryItem = useCallback((id: string, input: ItineraryItemInput) => {
+    const result = validateItineraryInput(input);
+    if (!result.valid) {
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       itinerary: prev.itinerary.map((item) =>
-        item.id === id ? { ...item, ...input, id } : item,
+        item.id === id ? { ...item, ...result.sanitized, id } : item,
       ),
     }));
   }, []);
@@ -54,12 +65,17 @@ export function TravelPlannerProvider({ children }: TravelPlannerProviderProps) 
   }, []);
 
   const updateNotice = useCallback((input: NoticeUpdateInput) => {
+    const result = validateNoticeInput(input);
+    if (!result.valid) {
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       notice: {
         ...prev.notice,
-        title: input.title,
-        content: input.content,
+        title: result.sanitized.title,
+        content: result.sanitized.content,
         updatedAt: new Date().toISOString(),
       },
     }));
