@@ -1,9 +1,19 @@
-import { useState } from 'react';
-import { CheckCircle2, Info } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import {
+  BellRing,
+  CarTaxiFront,
+  CheckCircle2,
+  ChevronRight,
+  Info,
+  Siren,
+} from 'lucide-react';
 import { useTravelPlanner } from '../../context/TravelPlannerContext';
+import { SOS_EMERGENCY_DATA, TAXI_CARD_HOTEL_INFO } from '../../data/sampleData';
 import { VoucherItem } from '../../types/travel';
 import { EmergencyContactList } from './EmergencyContactList';
+import { EmergencySosModal } from './EmergencySosModal';
 import { ReservationSummarySection } from './ReservationSummarySection';
+import { TaxiCardModal } from './TaxiCardModal';
 import { VoucherCard } from './VoucherCard';
 import { VoucherQrModal } from './VoucherQrModal';
 
@@ -11,6 +21,16 @@ export function VoucherSosPage() {
   const { state } = useTravelPlanner();
   const { vouchers, reservations, emergencyContacts } = state;
   const [selectedVoucher, setSelectedVoucher] = useState<VoucherItem | null>(null);
+  const [isTaxiCardOpen, setIsTaxiCardOpen] = useState(false);
+  const [isSosModalOpen, setIsSosModalOpen] = useState(false);
+
+  const handleCloseTaxiCard = useCallback(() => {
+    setIsTaxiCardOpen(false);
+  }, []);
+
+  const handleCloseSosModal = useCallback(() => {
+    setIsSosModalOpen(false);
+  }, []);
 
   return (
     <div className="space-y-6 pb-6">
@@ -23,7 +43,7 @@ export function VoucherSosPage() {
           </span>
         </div>
         <p className="text-body-md text-on-surface-variant">
-          도쿄 2박 3일 예약 증빙 및 기본 연락처
+          도쿄 2박 3일 예약 증빙 및 긴급 지원
         </p>
       </header>
 
@@ -41,6 +61,58 @@ export function VoucherSosPage() {
           </p>
         </div>
       </div>
+
+      <section aria-label="현지 빠른 지원" className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => setIsTaxiCardOpen(true)}
+          className="bg-primary hover:bg-primary-container text-on-primary p-4 rounded-2xl flex flex-col justify-between gap-4 text-left shadow-card active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
+        >
+          <div className="flex items-center justify-between w-full">
+            <span
+              className="w-10 h-10 rounded-xl bg-surface-container-highest/20 text-[#ffcc00] flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <CarTaxiFront className="w-5 h-5" />
+            </span>
+            <ChevronRight className="w-4 h-4 text-primary-fixed-dim" aria-hidden="true" />
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="block text-label-lg font-bold text-on-primary leading-snug">
+              현지어 택시 카드 보기
+            </span>
+            <span className="block text-label-sm text-primary-fixed-dim">
+              기사님께 숙소 주소 제시
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsSosModalOpen(true)}
+          className="bg-error hover:opacity-95 text-on-error p-4 rounded-2xl flex flex-col justify-between gap-4 text-left shadow-card active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2"
+        >
+          <div className="flex items-center justify-between w-full">
+            <span
+              className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <Siren className="w-5 h-5" />
+            </span>
+            <BellRing className="w-4 h-4 text-error-container" aria-hidden="true" />
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="block text-label-lg font-bold text-on-error leading-snug">
+              긴급 SOS
+            </span>
+            <span className="block text-label-sm text-error-container">
+              가이드·경찰·대사관 연결
+            </span>
+          </div>
+        </button>
+      </section>
 
       <section aria-labelledby="voucher-list-heading" className="space-y-3">
         <div className="flex items-center gap-2">
@@ -78,6 +150,18 @@ export function VoucherSosPage() {
       <VoucherQrModal
         voucher={selectedVoucher}
         onClose={() => setSelectedVoucher(null)}
+      />
+
+      <TaxiCardModal
+        isOpen={isTaxiCardOpen}
+        hotel={TAXI_CARD_HOTEL_INFO}
+        onClose={handleCloseTaxiCard}
+      />
+
+      <EmergencySosModal
+        isOpen={isSosModalOpen}
+        sosData={SOS_EMERGENCY_DATA}
+        onClose={handleCloseSosModal}
       />
     </div>
   );

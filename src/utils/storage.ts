@@ -1,5 +1,6 @@
 import { createInitialSampleState } from '../data/sampleData';
 import { SCHEMA_VERSION, STORAGE_KEY, TravelPlannerState } from '../types/travel';
+import { sanitizeStoredState } from './validation';
 
 function isValidTravelPlannerState(value: unknown): value is TravelPlannerState {
   if (!value || typeof value !== 'object') {
@@ -35,7 +36,7 @@ export function loadTravelState(): TravelPlannerState {
       return fallback;
     }
 
-    return parsed;
+    return sanitizeStoredState(parsed);
   } catch {
     return createInitialSampleState();
   }
