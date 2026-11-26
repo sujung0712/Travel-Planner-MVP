@@ -1,0 +1,1 @@
+export { VoucherSosPage } from './VoucherSosPage';
